@@ -33,6 +33,24 @@ export const createTSPlugin: tsModule.server.PluginModuleFactory = ({
   typescript: ts,
 }) => {
   function create(info: tsModule.server.PluginCreateInfo) {
+    // Set up decorator object
+    const proxy = Object.create(null)
+    for (let k of Object.keys(info.languageService)) {
+      const x = (info.languageService as any)[k]
+      proxy[k] = (...args: Array<{}>) => x.apply(info.languageService, args)
+    }
+
+    // Get plugin options
+    // config is the plugin options from the user's tsconfig.json
+    // e.g. { "plugins": [{ "name": "next", "enabled": true }] }
+    // config will be { "name": "next", "enabled": true }
+    // The default user config is { "name": "next" }
+    const isPluginEnabled = info.config.enabled ?? true
+
+    if (!isPluginEnabled) {
+      return proxy
+    }
+
     const logger = info.project.projectService.logger
 
     logger.info('[Next.js] Initializing...')
@@ -128,24 +146,6 @@ export const createTSPlugin: tsModule.server.PluginModuleFactory = ({
       // This is the same function call that the Svelte TS plugin makes
       // @ts-expect-error internal API since TS 5.5
       info.project.markAsDirty?.()
-    }
-
-    // Set up decorator object
-    const proxy = Object.create(null)
-    for (let k of Object.keys(info.languageService)) {
-      const x = (info.languageService as any)[k]
-      proxy[k] = (...args: Array<{}>) => x.apply(info.languageService, args)
-    }
-
-    // Get plugin options
-    // config is the plugin options from the user's tsconfig.json
-    // e.g. { "plugins": [{ "name": "next", "enabled": true }] }
-    // config will be { "name": "next", "enabled": true }
-    // The default user config is { "name": "next" }
-    const isPluginEnabled = info.config.enabled ?? true
-
-    if (!isPluginEnabled) {
-      return proxy
     }
 
     // Auto completion
