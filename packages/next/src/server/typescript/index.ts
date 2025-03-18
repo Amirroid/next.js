@@ -53,14 +53,10 @@ export const createTSPlugin: tsModule.server.PluginModuleFactory = ({
 
     const logger = info.project.projectService.logger
 
-    logger.info('[Next.js] Initializing...')
-
     init({
       ts,
       info: info as PluginCreateInfo,
     })
-
-    logger.info('[Next.js] Initialized!')
 
     const virtualFiles: Record<
       string,
